@@ -9,21 +9,25 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createIssueSchema } from '@/app/validationSchemas';
 import { z } from 'zod';
 import ErrorMessage from '@/components/ErrorMessage';
+import Spinner from '@/components/Spinner';
 
 type TIssueForm = z.infer<typeof createIssueSchema>
 
 export default function NewIssuePage() {
   const router = useRouter();
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const { register, handleSubmit, formState: { errors } } = useForm<TIssueForm>({
     resolver: zodResolver(createIssueSchema)
   });
 
   const submit = async (data: TIssueForm) => {
     try {
+      setSubmitting(true)
       await axios.post('/api/issues', data);
       router.push('/issues');
     } catch (error) {
+      setSubmitting(false)
       setError('An error occurred')
     }
   };
@@ -42,7 +46,7 @@ export default function NewIssuePage() {
         <ErrorMessage>{errors.title?.message}</ErrorMessage>
         <TextArea placeholder="Description" {...register('description')} />
         <ErrorMessage>{errors.description?.message}</ErrorMessage>
-        <Button>Submit New Issue</Button>
+        <Button disabled={submitting}>Submit New Issue {submitting && <Spinner />}</Button>
       </form>
     </div>
   );
