@@ -24,3 +24,21 @@ enum Status {
   IN_PROGRESS
   CLOSED
 }
+
+model User {
+  id     Int       @id @default(autoincrement())
+  name   String    @db.VarChar(255)
+  email  String    @db.VarChar(255)
+  phone  String    @db.VarChar(50)
+  upi    String    @db.VarChar(255)
+  status Status    @default(OPEN)
+  auth   AuthUser?
+}
+
+model AuthUser {
+  id       Int    @id @default(autoincrement())
+  password String @db.VarChar(255)
+
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+}
