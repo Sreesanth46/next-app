@@ -31,13 +31,13 @@ export const verifyAccessToken = (token: string) => {
   });
 };
 
-export const verifyRefreshToken = (token: string) => {
+export const verifyRefreshToken = (token: string): any => {
   jwt.verify(token, ACCESS_TOKEN_SECRET, (err, user: any) => {
     if (err) return new Error('Refresh token expired', { cause: 401 });
 
     const { iat, exp, ...data } = user;
     const accessToken = generateAccessToken(data);
 
-    return { accessToken };
+    return { accessToken, user: data };
   });
 };
