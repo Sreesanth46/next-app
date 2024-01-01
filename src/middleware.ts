@@ -1,15 +1,39 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { verifyAccessToken, verifyRefreshToken } from '@/helpers/jwt';
 
 export function middleware(request: NextRequest) {
-  const path = JSON.stringify(request.nextUrl.pathname);
-  console.warn(path);
+  const path = request.nextUrl.pathname;
+  const isApi = path.includes('/api/');
 
-  const token = request.cookies.get('accessToken') || '';
+  if (isApi) {
+    const accessToken = request.cookies.get('accessToken')?.value || '';
+    try {
+      const tokenData = verifyAccessToken(accessToken);
+      request.user = tokenData;
+      NextResponse.next();
+    } catch (error: any) {
+      try {
+        const refreshToken = request.cookies.get('refreshToken')?.value || '';
+        if (error.cause === 401) {
+          const { accessToken, user } = verifyRefreshToken(refreshToken);
+          const response = NextResponse.next();
+          request.user = user;
+          response.cookies.set('accessToken', accessToken);
+          return response;
+        }
+      } catch (err) {
+        NextResponse.redirect(new URL('/login', request.url));
+      }
+    }
+  }
 
-  return NextResponse.next();
+  if (request.cookies.has('accessToken')) {
+    return NextResponse.redirect(new URL('/', request.url));
+  } else {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
 }
 
 export const config = {
-  matcher: ['/api/:path*']
+  matcher: ['/']
 };
