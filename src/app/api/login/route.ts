@@ -4,6 +4,7 @@ import { loginSchema } from '@/app/validationSchemas';
 import { NextRequest, NextResponse } from 'next/server';
 import { ErrorHandler } from '../_utils/decorator';
 import jwt from 'jsonwebtoken';
+import { generateAuthToken } from '@/helpers/jwt';
 
 async function login(request: NextRequest) {
   const body = await request.json();
@@ -27,8 +28,8 @@ async function login(request: NextRequest) {
     if (!passwordMatches) throw Error('Invalid credentials', { cause: 401 });
 
     const { auth, ...userWithoutPassword } = user;
-    const accessToken = jwt.sign(userWithoutPassword, 'AccessTokenSecret');
-    const refreshToken = jwt.sign(userWithoutPassword, 'RefreshTokenSecret');
+    const { accessToken, refreshToken } =
+      generateAuthToken(userWithoutPassword);
 
     return NextResponse.json(
       { ...userWithoutPassword, accessToken, refreshToken },
