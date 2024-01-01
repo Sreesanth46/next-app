@@ -31,10 +31,14 @@ async function login(request: NextRequest) {
     const { accessToken, refreshToken } =
       generateAuthToken(userWithoutPassword);
 
-    return NextResponse.json(
-      { ...userWithoutPassword, accessToken, refreshToken },
+    const response = NextResponse.json(
+      { ...userWithoutPassword },
       { status: 200 }
     );
+    response.cookies.set('accessToken', accessToken);
+    response.cookies.set('refreshToken', refreshToken);
+
+    return response;
   } catch (error) {
     throw Error('Invalid credentials', { cause: 401 });
   }
